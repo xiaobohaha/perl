@@ -2708,12 +2708,12 @@ PP(pp_sin)
 extern double drand48 (void);
 #endif
 
+
 PP(pp_rand)
 {
     dVAR;
     if (!PL_srand_called) {
-	(void)seedDrand01((Rand_seed_t)seed());
-	PL_srand_called = TRUE;
+        SEED_RAND(seed());
     }
     {
 	dSP;
@@ -2736,7 +2736,7 @@ PP(pp_rand)
 	    dTARGET;
 	    PUSHs(TARG);
 	    PUTBACK;
-	    value *= Drand01();
+            value *= RAND01();
 	    sv_setnv_mg(TARG, value);
 	}
     }
@@ -2768,8 +2768,7 @@ PP(pp_srand)
         anum = seed();
     }
 
-    (void)seedDrand01((Rand_seed_t)anum);
-    PL_srand_called = TRUE;
+    SEED_RAND(anum);
     if (anum)
 	XPUSHu(anum);
     else {
