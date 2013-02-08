@@ -10902,7 +10902,7 @@ tryagain:
 			p++;
 			break;
 		    case 'a':
-			  ender = ASCII_TO_NATIVE('\007');
+			  ender = '\a';
 			p++;
 			break;
 		    case 'o':
@@ -12563,7 +12563,7 @@ parseit:
 	    case 'f':	value = '\f';			break;
 	    case 'b':	value = '\b';			break;
 	    case 'e':	value = ASCII_TO_NATIVE('\033');break;
-	    case 'a':	value = ASCII_TO_NATIVE('\007');break;
+	    case 'a':	value = '\a';                   break;
 	    case 'o':
 		RExC_parse--;	/* function expects to be pointed at the 'o' */
 		{
