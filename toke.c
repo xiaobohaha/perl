@@ -3255,7 +3255,7 @@ S_scan_const(pTHX_ char *start)
 	else if (*s == '(' && PL_lex_inpat && s[1] == '?' && !in_charclass) {
 	    if (s[2] == '#') {
 		while (s+1 < send && *s != ')')
-		    *d++ = NATIVE_TO_NEED(has_utf8,*s++);
+		    *d++ = *s++;
 	    }
 	    else if (!PL_lex_casemods &&
 		     (    s[2] == '{' /* This should match regcomp.c */
@@ -3269,7 +3269,7 @@ S_scan_const(pTHX_ char *start)
 	else if (*s == '#' && PL_lex_inpat && !in_charclass &&
 	  ((PMOP*)PL_lex_inpat)->op_pmflags & RXf_PMf_EXTENDED) {
 	    while (s+1 < send && *s != '\n')
-		*d++ = NATIVE_TO_NEED(has_utf8,*s++);
+		*d++ = *s++;
 	}
 
 	/* no further processing of single-quoted regex */
@@ -3810,7 +3810,7 @@ S_scan_const(pTHX_ char *start)
 #endif
 	}
 	else {
-	    *d++ = NATIVE_TO_NEED(has_utf8,*s++);
+	    *d++ = *s++;
 	}
     } /* while loop to process each character */
 
