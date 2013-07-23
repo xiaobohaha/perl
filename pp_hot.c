@@ -1393,15 +1393,16 @@ PP(pp_match)
 	MAGIC * const mg = mg_find_mglob(TARG);
 	RX_OFFS(rx)[0].start = -1;
 	if (mg && mg->mg_len >= 0) {
+		const STRLEN off = MgBYTEPOS(mg, TARG, s, len);
 		if (!(RX_EXTFLAGS(rx) & RXf_GPOS_SEEN))
-		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = mg->mg_len;
+		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = off;
 		else if (RX_EXTFLAGS(rx) & RXf_ANCH_GPOS) {
 		    r_flags |= REXEC_IGNOREPOS;
-		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = mg->mg_len;
+		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = off;
 		} else if (RX_EXTFLAGS(rx) & RXf_GPOS_FLOAT) 
-		    gpos = mg->mg_len;
+		    gpos = off;
 		else 
-		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = mg->mg_len;
+		    RX_OFFS(rx)[0].end = RX_OFFS(rx)[0].start = off;
 		minmatch = (mg->mg_flags & MGf_MINMATCH) ? RX_GOFS(rx) + 1 : 0;
 		update_minmatch = 0;
 	}
@@ -1494,7 +1495,7 @@ PP(pp_match)
 		    mg = sv_magicext_mglob(TARG);
 		}
 		if (RX_OFFS(rx)[0].start != -1) {
-		    mg->mg_len = RX_OFFS(rx)[0].end;
+		    MgBYTEPOS_set(mg, TARG, s, RX_OFFS(rx)[0].end);
 		    if (RX_OFFS(rx)[0].start + RX_GOFS(rx) == (UV)RX_OFFS(rx)[0].end)
 			mg->mg_flags |= MGf_MINMATCH;
 		    else
@@ -1520,7 +1521,7 @@ PP(pp_match)
 		mg = sv_magicext_mglob(TARG);
 	    }
 	    if (RX_OFFS(rx)[0].start != -1) {
-		mg->mg_len = RX_OFFS(rx)[0].end;
+		MgBYTEPOS_set(mg, TARG, s, RX_OFFS(rx)[0].end);
 		if (RX_OFFS(rx)[0].start + RX_GOFS(rx) == (UV)RX_OFFS(rx)[0].end)
 		    mg->mg_flags |= MGf_MINMATCH;
 		else

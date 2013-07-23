@@ -2196,9 +2196,10 @@ Perl_regexec_flags(pTHX_ REGEXP * const rx, char *stringarg, char *strend,
 	      "GPOS IGNOREPOS: reginfo->ganch = startpos + %"UVxf"\n",(UV)prog->gofs));
 	} else if (sv && (mg = mg_find_mglob(sv))
 		  && mg->mg_len >= 0) {
-	    reginfo->ganch = strbeg + mg->mg_len;	/* Defined pos() */
+	    STRLEN off = MgBYTEPOS(mg, sv, strbeg, strend-strbeg);
+	    reginfo->ganch = strbeg + off; /* Defined pos() */	
 	    DEBUG_GPOS_r(PerlIO_printf(Perl_debug_log,
-		"GPOS MAGIC: reginfo->ganch = strbeg + %"IVdf"\n",(IV)mg->mg_len));
+		"GPOS MAGIC: reginfo->ganch = strbeg + %"UVuf"\n",(UV)off));
 
 	    if (prog->extflags & RXf_ANCH_GPOS) {
 	        if (s > reginfo->ganch)
@@ -4922,8 +4923,9 @@ S_regmatch(pTHX_ regmatch_info *reginfo, char *startpos, regnode *prog)
 
 		rex->offs[0].end = locinput - reginfo->strbeg;
                 if (reginfo->info_aux_eval->pos_magic)
-                        reginfo->info_aux_eval->pos_magic->mg_len
-                                        = locinput - reginfo->strbeg;
+                    MgBYTEPOS_set(reginfo->info_aux_eval->pos_magic,
+                                  reginfo->sv, reginfo->strbeg,
+                                  locinput - reginfo->strbeg);
 
                 if (sv_yes_mark) {
                     SV *sv_mrk = get_sv("REGMARK", 1);
@@ -7538,6 +7540,7 @@ S_setup_eval_state(pTHX_ regmatch_info *const reginfo)
         }
         eval_state->pos_magic = mg;
         eval_state->pos       = mg->mg_len;
+        eval_state->pos_flags = mg->mg_flags;
     }
     else
         eval_state->pos_magic = NULL;
@@ -7612,7 +7615,12 @@ S_cleanup_regmatch_info_aux(pTHX_ void *arg)
             RXp_MATCH_COPIED_on(rex);
         }
         if (eval_state->pos_magic)
+        {
             eval_state->pos_magic->mg_len = eval_state->pos;
+            eval_state->pos_magic->mg_flags =
+                 (eval_state->pos_magic->mg_flags & ~MGf_BYTES)
+               | (eval_state->pos_flags & MGf_BYTES);
+        }
 
         PL_curpm = eval_state->curpm;
     }
