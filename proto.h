@@ -6483,31 +6483,31 @@ PERL_STATIC_INLINE void	S_alloc_maybe_populate_EXACT(pTHX_ struct RExC_state_t *
 #define PERL_ARGS_ASSERT_ALLOC_MAYBE_POPULATE_EXACT	\
 	assert(pRExC_state); assert(node); assert(flagp)
 
-STATIC void	S_cl_and(struct regnode_charclass_class *cl, const struct regnode_charclass_class *and_with)
+STATIC void	S_cl_and(regnode_ssc *cl, const regnode_ssc *and_with)
 			__attribute__nonnull__(1)
 			__attribute__nonnull__(2);
 #define PERL_ARGS_ASSERT_CL_AND	\
 	assert(cl); assert(and_with)
 
-STATIC void	S_cl_anything(const struct RExC_state_t *pRExC_state, struct regnode_charclass_class *cl)
+STATIC void	S_cl_anything(const struct RExC_state_t *pRExC_state, regnode_ssc *cl)
 			__attribute__nonnull__(1)
 			__attribute__nonnull__(2);
 #define PERL_ARGS_ASSERT_CL_ANYTHING	\
 	assert(pRExC_state); assert(cl)
 
-STATIC void	S_cl_init(const struct RExC_state_t *pRExC_state, struct regnode_charclass_class *cl)
+STATIC void	S_cl_init(const struct RExC_state_t *pRExC_state, regnode_ssc *cl)
 			__attribute__nonnull__(1)
 			__attribute__nonnull__(2);
 #define PERL_ARGS_ASSERT_CL_INIT	\
 	assert(pRExC_state); assert(cl)
 
-STATIC int	S_cl_is_anything(const struct regnode_charclass_class *cl)
+STATIC int	S_cl_is_anything(const regnode_ssc *cl)
 			__attribute__warn_unused_result__
 			__attribute__nonnull__(1);
 #define PERL_ARGS_ASSERT_CL_IS_ANYTHING	\
 	assert(cl)
 
-STATIC void	S_cl_or(const struct RExC_state_t *pRExC_state, struct regnode_charclass_class *cl, const struct regnode_charclass_class *or_with)
+STATIC void	S_cl_or(const struct RExC_state_t *pRExC_state, regnode_ssc *cl, const regnode_ssc *or_with)
 			__attribute__nonnull__(1)
 			__attribute__nonnull__(2)
 			__attribute__nonnull__(3);
@@ -6770,7 +6770,7 @@ STATIC void	S_scan_commit(pTHX_ const struct RExC_state_t *pRExC_state, struct s
 #define PERL_ARGS_ASSERT_SCAN_COMMIT	\
 	assert(pRExC_state); assert(data); assert(minlenp)
 
-STATIC I32	S_study_chunk(pTHX_ struct RExC_state_t *pRExC_state, regnode **scanp, I32 *minlenp, I32 *deltap, regnode *last, struct scan_data_t *data, I32 stopparen, U8* recursed, struct regnode_charclass_class *and_withp, U32 flags, U32 depth)
+STATIC I32	S_study_chunk(pTHX_ struct RExC_state_t *pRExC_state, regnode **scanp, I32 *minlenp, I32 *deltap, regnode *last, struct scan_data_t *data, I32 stopparen, U8* recursed, regnode_ssc *and_withp, U32 flags, U32 depth)
 			__attribute__nonnull__(pTHX_1)
 			__attribute__nonnull__(pTHX_2)
 			__attribute__nonnull__(pTHX_3)
