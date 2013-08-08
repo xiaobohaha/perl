@@ -52,6 +52,32 @@ This is a synonym for (! foldEQ_locale())
 #define ibcmp(s1, s2, len)         cBOOL(! foldEQ(s1, s2, len))
 #define ibcmp_locale(s1, s2, len)  cBOOL(! foldEQ_locale(s1, s2, len))
 
+#ifdef U64TYPE
+/* use a faster implementation */
+#define FREEBSD_DRAND48_QUAD
+#endif
+
+#ifdef FREEBSD_DRAND48_QUAD
+
+/* U64 is only defined under PERL_CORE, but this needs to be visible
+ * elsewhere so the definition of PerlInterpreter is complete.
+ */
+typedef U64TYPE freebsd_drand48_t;
+
+#else
+
+/* see copyright in util.c */
+struct FREEBSD_DRAND48_T {
+    U16 seed[3];
+};
+
+typedef struct FREEBSD_DRAND48_T freebsd_drand48_t;
+
+#endif
+
+#define PL_RANDOM_STATE_TYPE freebsd_drand48_t
+#define SEED_RAND(x) freebsd_drand48_init((U32)x)
+#define RAND01() freebsd_drand48_generate_double()
 
 /*
  * Local variables:

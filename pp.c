@@ -2717,7 +2717,7 @@ PP(pp_rand)
 {
     dVAR;
     if (!PL_srand_called) {
-	(void)seedDrand01((Rand_seed_t)seed());
+	(void)SEED_RAND(seed());
 	PL_srand_called = TRUE;
     }
     {
@@ -2741,7 +2741,7 @@ PP(pp_rand)
 	    dTARGET;
 	    PUSHs(TARG);
 	    PUTBACK;
-	    value *= Drand01();
+	    value *= RAND01();
 	    sv_setnv_mg(TARG, value);
 	}
     }
@@ -2773,7 +2773,7 @@ PP(pp_srand)
         anum = seed();
     }
 
-    (void)seedDrand01((Rand_seed_t)anum);
+    (void)SEED_RAND((Rand_seed_t)anum);
     PL_srand_called = TRUE;
     if (anum)
 	XPUSHu(anum);
