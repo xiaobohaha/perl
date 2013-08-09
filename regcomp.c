@@ -832,11 +832,11 @@ S_ssc_anything(const RExC_state_t *pRExC_state, regnode_ssc *ssc)
      * parts of it may not work properly, it is safest to avoid locale unless
      * necessary. */
     if (RExC_contains_locale) {
-	ANYOF_CLASS_SETALL(ssc);	    /* /l uses class */
-	ssc->flags |= ANYOF_LOCALE|ANYOF_CLASS|ANYOF_LOC_FOLD;
+	ANYOF_POSIXL_SETALL(ssc);	    /* /l uses class */
+	ssc->flags |= ANYOF_LOCALE|ANYOF_POSIXL|ANYOF_LOC_FOLD;
     }
     else {
-	ANYOF_CLASS_ZERO(ssc);	    /* Only /l uses class now */
+	ANYOF_POSIXL_ZERO(ssc);	    /* Only /l uses class now */
     }
 }
 
@@ -848,8 +848,8 @@ S_ssc_is_anything(const regnode_ssc *ssc)
 
     PERL_ARGS_ASSERT_SSC_IS_ANYTHING;
 
-    for (value = 0; value < ANYOF_MAX; value += 2)
-	if (ANYOF_CLASS_TEST(ssc, value) && ANYOF_CLASS_TEST(ssc, value + 1))
+    for (value = 0; value < ANYOF_POSIXL_MAX; value += 2)
+	if (ANYOF_POSIXL_TEST(ssc, value) && ANYOF_POSIXL_TEST(ssc, value + 1))
 	    return 1;
     if (!(ssc->flags & ANYOF_UNICODE_ALL))
 	return 0;
@@ -875,7 +875,7 @@ S_ssc_init(const RExC_state_t *pRExC_state, regnode_ssc *ssc)
 #define ssc_init_zero		ssc_init
 
 /* 'AND' a given class with another one.  Can create false positives.  'ssc'
- * should not be inverted.  'and_with->flags & ANYOF_CLASS' should be 0 if
+ * should not be inverted.  'and_with->flags & ANYOF_POSIXL' should be 0 if
  * 'and_with' is a regnode_charclass instead of a regnode_ssc. */
 STATIC void
 S_ssc_and(regnode_ssc *ssc, const regnode_ssc *and_with)
@@ -885,8 +885,8 @@ S_ssc_and(regnode_ssc *ssc, const regnode_ssc *and_with)
     assert(PL_regkind[and_with->type] == ANYOF);
 
     /* I (khw) am not sure all these restrictions are necessary XXX */
-    if (!(ANYOF_CLASS_TEST_ANY_SET(and_with))
-	&& !(ANYOF_CLASS_TEST_ANY_SET(ssc))
+    if (!(ANYOF_POSIXL_TEST_ANY_SET(and_with))
+	&& !(ANYOF_POSIXL_TEST_ANY_SET(ssc))
 	&& (and_with->flags & ANYOF_LOCALE) == (ssc->flags & ANYOF_LOCALE)
 	&& !(and_with->flags & ANYOF_LOC_FOLD)
 	&& !(ssc->flags & ANYOF_LOC_FOLD)) {
@@ -997,7 +997,7 @@ S_ssc_and(regnode_ssc *ssc, const regnode_ssc *and_with)
 }
 
 /* 'OR' a given class with another one.  Can create false positives.  'ssc'
- * should not be inverted.  'or_with->flags & ANYOF_CLASS' should be 0 if
+ * should not be inverted.  'or_with->flags & ANYOF_POSIXL' should be 0 if
  * 'or_with' is a regnode_charclass instead of a regnode_ssc. */
 STATIC void
 S_ssc_or(const RExC_state_t *pRExC_state, regnode_ssc *ssc, const regnode_ssc *or_with)
@@ -1056,8 +1056,8 @@ S_ssc_or(const RExC_state_t *pRExC_state, regnode_ssc *ssc, const regnode_ssc *o
 	    /* OR char bitmap and class bitmap separately */
 	    for (i = 0; i < ANYOF_BITMAP_SIZE; i++)
 		ssc->bitmap[i] |= or_with->bitmap[i];
-            if (or_with->flags & ANYOF_CLASS) {
-                ANYOF_CLASS_OR(or_with, ssc);
+            if (or_with->flags & ANYOF_POSIXL) {
+                ANYOF_POSIXL_OR(or_with, ssc);
             }
 	}
 	else { /* XXXX: logic is complicated, leave it along for a moment. */
@@ -3645,7 +3645,7 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
 		{
 		    compat = 0;
 		}
-		ANYOF_CLASS_ZERO(data->start_class);
+		ANYOF_POSIXL_ZERO(data->start_class);
 		ANYOF_BITMAP_ZERO(data->start_class);
 		if (compat)
 		    ANYOF_BITMAP_SET(data->start_class, uc);
@@ -3720,7 +3720,7 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
 		{
 		    compat = 0;
 		}
-		ANYOF_CLASS_ZERO(data->start_class);
+		ANYOF_POSIXL_ZERO(data->start_class);
 		ANYOF_BITMAP_ZERO(data->start_class);
 		if (compat) {
 		    ANYOF_BITMAP_SET(data->start_class, uc);
@@ -4239,7 +4239,7 @@ PerlIO_printf(Perl_debug_log, "LHS=%d RHS=%d\n", -counted * deltanext + (minnext
 			goto do_default;
 		    if (flags & SCF_DO_STCLASS_OR) { /* Everything but \n */
 			value = (ANYOF_BITMAP_TEST(data->start_class,'\n')
-				|| ANYOF_CLASS_TEST_ANY_SET(data->start_class));
+			      || ANYOF_POSIXL_TEST_ANY_SET(data->start_class));
 			ssc_anything(pRExC_state, data->start_class);
 		    }
 		    if (flags & SCF_DO_STCLASS_AND || !value)
@@ -4261,7 +4261,8 @@ PerlIO_printf(Perl_debug_log, "LHS=%d RHS=%d\n", -counted * deltanext + (minnext
                     classnum = FLAGS(scan);
 		    if (flags & SCF_DO_STCLASS_AND) {
 			if (!(data->start_class->flags & ANYOF_LOCALE)) {
-			    ANYOF_CLASS_CLEAR(data->start_class, classnum_to_namedclass(classnum) + 1);
+			    ANYOF_POSIXL_CLEAR(data->start_class,
+                                         classnum_to_namedclass(classnum) + 1);
                             for (value = 0; value < loop_max; value++) {
                                 if (! _generic_isCC(UNI_TO_NATIVE(value), classnum)) {
                                     ANYOF_BITMAP_CLEAR(data->start_class, UNI_TO_NATIVE(value));
@@ -4271,7 +4272,8 @@ PerlIO_printf(Perl_debug_log, "LHS=%d RHS=%d\n", -counted * deltanext + (minnext
 		    }
 		    else {
 			if (data->start_class->flags & ANYOF_LOCALE) {
-			    ANYOF_CLASS_SET(data->start_class, classnum_to_namedclass(classnum));
+			    ANYOF_POSIXL_SET(data->start_class,
+                                             classnum_to_namedclass(classnum));
                         }
                         else {
 
@@ -4295,7 +4297,7 @@ PerlIO_printf(Perl_debug_log, "LHS=%d RHS=%d\n", -counted * deltanext + (minnext
                     classnum = FLAGS(scan);
 		    if (flags & SCF_DO_STCLASS_AND) {
 			if (!(data->start_class->flags & ANYOF_LOCALE)) {
-			    ANYOF_CLASS_CLEAR(data->start_class, classnum_to_namedclass(classnum));
+			    ANYOF_POSIXL_CLEAR(data->start_class, classnum_to_namedclass(classnum));
                             for (value = 0; value < loop_max; value++) {
                                 if (_generic_isCC(UNI_TO_NATIVE(value), classnum)) {
                                     ANYOF_BITMAP_CLEAR(data->start_class, UNI_TO_NATIVE(value));
@@ -4305,7 +4307,8 @@ PerlIO_printf(Perl_debug_log, "LHS=%d RHS=%d\n", -counted * deltanext + (minnext
 		    }
 		    else {
 			if (data->start_class->flags & ANYOF_LOCALE) {
-			    ANYOF_CLASS_SET(data->start_class, classnum_to_namedclass(classnum) + 1);
+			    ANYOF_POSIXL_SET(data->start_class,
+                                         classnum_to_namedclass(classnum) + 1);
                         }
                         else {
 
@@ -12741,18 +12744,19 @@ parseit:
          * locale, and hence are dealt with separately */
         if (LOC
             && ! need_class
-            && (ANYOF_LOCALE == ANYOF_CLASS
-                || (namedclass > OOB_NAMEDCLASS && namedclass < ANYOF_MAX)))
+            && (ANYOF_LOCALE == ANYOF_POSIXL
+                || (namedclass > OOB_NAMEDCLASS
+                    && namedclass < ANYOF_POSIXL_MAX)))
         {
             need_class = 1;
             if (SIZE_ONLY) {
-                RExC_size += ANYOF_CLASS_SKIP - ANYOF_SKIP;
+                RExC_size += ANYOF_POSIXL_SKIP - ANYOF_SKIP;
             }
             else {
-                RExC_emit += ANYOF_CLASS_SKIP - ANYOF_SKIP;
-                ANYOF_CLASS_ZERO(ret);
+                RExC_emit += ANYOF_POSIXL_SKIP - ANYOF_SKIP;
+                ANYOF_POSIXL_ZERO(ret);
             }
-            ANYOF_FLAGS(ret) |= ANYOF_CLASS;
+            ANYOF_FLAGS(ret) |= ANYOF_POSIXL;
         }
 
 	if (namedclass > OOB_NAMEDCLASS) { /* this is a named class \blah */
@@ -12785,7 +12789,7 @@ parseit:
 
 	    if (! SIZE_ONLY) {
                 U8 classnum = namedclass_to_classnum(namedclass);
-                if (namedclass >= ANYOF_MAX) {  /* If a special class */
+                if (namedclass >= ANYOF_POSIXL_MAX) {  /* If a special class */
                     if (namedclass != ANYOF_UNIPROP) { /* UNIPROP = \p and \P */
 
                         /* Here, should be \h, \H, \v, or \V.  Neither /d nor
@@ -12814,7 +12818,7 @@ parseit:
                 else if (classnum == _CC_ASCII) {
 #ifdef HAS_ISASCII
                     if (LOC) {
-                        ANYOF_CLASS_SET(ret, namedclass);
+                        ANYOF_POSIXL_SET(ret, namedclass);
                     }
                     else
 #endif  /* Not isascii(); just use the hard-coded definition for it */
@@ -12877,7 +12881,7 @@ parseit:
                                 }
                                 if (LOC) {  /* Under locale, set run-time
                                                lookup */
-                                    ANYOF_CLASS_SET(ret, namedclass);
+                                    ANYOF_POSIXL_SET(ret, namedclass);
                                 }
                                 else {
                                     /* Add the current class's code points to
@@ -12905,7 +12909,7 @@ parseit:
                                                                  Xname);
                                     runtime_posix_matches_above_Unicode = TRUE;
                                     if (LOC) {
-                                        ANYOF_CLASS_SET(ret, namedclass);
+                                        ANYOF_POSIXL_SET(ret, namedclass);
                                     }
                                     else {
 
@@ -12986,7 +12990,7 @@ parseit:
 #endif
                                 /* Set this class in the node for runtime
                                  * matching */
-                                ANYOF_CLASS_SET(ret, namedclass);
+                                ANYOF_POSIXL_SET(ret, namedclass);
 #ifndef HAS_ISBLANK
                             }
                             else {
@@ -13027,7 +13031,7 @@ parseit:
 #ifndef HAS_ISBLANK
                             if (namedclass != ANYOF_NBLANK) {
 #endif
-                                ANYOF_CLASS_SET(ret, namedclass);
+                                ANYOF_POSIXL_SET(ret, namedclass);
 #ifndef HAS_ISBLANK
                             }
                             else {
@@ -13447,7 +13451,7 @@ parseit:
                     /* To get locale nodes to not use the full ANYOF size would
                      * require moving the code above that writes the portions
                      * of it that aren't in other nodes to after this point.
-                     * e.g.  ANYOF_CLASS_SET */
+                     * e.g.  ANYOF_POSIXL_SET */
                     RExC_size = orig_size;
                 }
             }
@@ -13813,7 +13817,7 @@ parseit:
      * invert if there are things such as \w, which aren't known until runtime
      * */
     if (invert
-        && ! (LOC && (FOLD || (ANYOF_FLAGS(ret) & ANYOF_CLASS)))
+        && ! (LOC && (FOLD || (ANYOF_FLAGS(ret) & ANYOF_POSIXL)))
 	&& ! depends_list
 	&& ! HAS_NONLOCALE_RUNTIME_PROPERTY_DEFINITION)
     {
@@ -13870,7 +13874,7 @@ parseit:
     if (cp_list
         && ! invert
         && ! depends_list
-        && ! (ANYOF_FLAGS(ret) & ANYOF_CLASS)
+        && ! (ANYOF_FLAGS(ret) & ANYOF_POSIXL)
         && ! HAS_NONLOCALE_RUNTIME_PROPERTY_DEFINITION)
     {
         UV start, end;
@@ -14861,10 +14865,10 @@ Perl_regprop(pTHX_ const regexp *prog, SV *sv, const regnode *o)
         
         EMIT_ANYOF_TEST_SEPARATOR(do_sep,sv,flags);
         /* output any special charclass tests (used entirely under use locale) */
-	if (ANYOF_CLASS_TEST_ANY_SET(o)) {
+	if (ANYOF_POSIXL_TEST_ANY_SET(o)) {
             int i;
 	    for (i = 0; i < (int)(sizeof(anyofs)/sizeof(char*)); i++) {
-		if (ANYOF_CLASS_TEST(o,i)) {
+		if (ANYOF_POSIXL_TEST(o,i)) {
 		    sv_catpv(sv, anyofs[i]);
 		    do_sep = 1;
 		}
@@ -15780,8 +15784,8 @@ S_dumpuntil(pTHX_ const regexp *r, const regnode *start, const regnode *node,
 	}
 	else if (PL_regkind[(U8)op] == ANYOF) {
 	    /* arglen 1 + class block */
-	    node += 1 + ((ANYOF_FLAGS(node) & ANYOF_CLASS)
-		    ? ANYOF_CLASS_SKIP : ANYOF_SKIP);
+	    node += 1 + ((ANYOF_FLAGS(node) & ANYOF_POSIXL)
+		    ? ANYOF_POSIXL_SKIP : ANYOF_SKIP);
 	    node = NEXTOPER(node);
 	}
 	else if (PL_regkind[(U8)op] == EXACT) {
