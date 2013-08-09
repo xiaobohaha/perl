@@ -154,6 +154,8 @@
 #define form			Perl_form
 #endif
 #define free_tmps()		Perl_free_tmps(aTHX)
+#define freebsd_drand48_generate_double()	Perl_freebsd_drand48_generate_double(aTHX)
+#define freebsd_drand48_init(a)	Perl_freebsd_drand48_init(aTHX_ a)
 #define get_av(a,b)		Perl_get_av(aTHX_ a,b)
 #define get_context		Perl_get_context
 #define get_cv(a,b)		Perl_get_cv(aTHX_ a,b)

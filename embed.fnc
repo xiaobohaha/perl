@@ -1575,6 +1575,8 @@ p	|I32	|wait4pid	|Pid_t pid|NN int* statusp|int flags
 : Used in locale.c and perl.c
 p	|U32	|parse_unicode_opts|NN const char **popt
 Ap	|U32	|seed
+Ap	|double	|freebsd_drand48_generate_double
+Ap	|void	|freebsd_drand48_init        |U32 seed
 : Only used in perl.c
 p        |void        |get_hash_seed        |NN unsigned char * const seed_buffer
 : Used in doio.c, pp_hot.c, pp_sys.c
