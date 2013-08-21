@@ -2878,9 +2878,12 @@ S_join_exact(pTHX_ RExC_state_t *pRExC_state, regnode *scan, UV *min_subtract, b
                 }
 
                 /* Nodes with 'ss' require special handling, except for EXACTFL
-                 * and EXACTFA for which there is no multi-char fold to this */
+                 * and EXACTFA-ish for which there is no multi-char fold to
+                 * this */
                 if (len == 2 && *s == 's' && *(s+1) == 's'
-                    && OP(scan) != EXACTFL && OP(scan) != EXACTFA)
+                    && OP(scan) != EXACTFL
+                    && OP(scan) != EXACTFA
+                    && OP(scan) != EXACTFA_NO_TRIE)
                 {
                     count = 2;
                     OP(scan) = EXACTFU_SS;
@@ -2898,7 +2901,10 @@ S_join_exact(pTHX_ RExC_state_t *pRExC_state, regnode *scan, UV *min_subtract, b
                      * test for them.  The code that generates the
                      * is_MULTI_foo() macros croaks should one actually get put
                      * into Unicode .) */
-                    if (OP(scan) != EXACTFL && OP(scan) != EXACTFA) {
+                    if (OP(scan) != EXACTFL
+                        && OP(scan) != EXACTFA
+                        && OP(scan) != EXACTFA_NO_TRIE)
+                    {
                         count = utf8_length(s, multi_end);
                         s = multi_end;
                     }
@@ -2927,9 +2933,12 @@ S_join_exact(pTHX_ RExC_state_t *pRExC_state, regnode *scan, UV *min_subtract, b
             /* Non-UTF-8 pattern, EXACTFA node.  There can't be a multi-char
              * fold to the ASCII range (and there are no existing ones in the
              * upper latin1 range).  But, as outlined in the comments preceding
-             * this function, we need to flag any occurrences of the sharp s */
+             * this function, we need to flag any occurrences of the sharp s.
+             * This character forbids trie formation (because of added
+             * complexity) */
 	    while (s < s_end) {
                 if (*s == LATIN_SMALL_LETTER_SHARP_S) {
+                    OP(scan) = EXACTFA_NO_TRIE;
                     *has_exactf_sharp_s = TRUE;
                     break;
                 }
@@ -3346,13 +3355,14 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
                                 EXACT           | EXACT
                                 EXACTFU         | EXACTFU
                                 EXACTFU_SS      | EXACTFU
-                                EXACTFA         | 0
+                                EXACTFA         | EXACTFA
 
 
                         */
 #define TRIE_TYPE(X) ( ( NOTHING == (X) ) ? NOTHING :   \
                        ( EXACT == (X) )   ? EXACT :        \
                        ( EXACTFU == (X) || EXACTFU_SS == (X) ) ? EXACTFU :        \
+                       ( EXACTFA == (X) ) ? EXACTFA :        \
                        0 )
 
                         /* dont use tail as the end marker for this traverse */
@@ -3732,7 +3742,8 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
                         /* All other (EXACTFL handled above) folds except under
                          * /iaa that include s, S, and sharp_s also may include
                          * the others */
-			if (OP(scan) != EXACTFA) {
+			if (OP(scan) != EXACTFA && OP(scan) != EXACTFA_NO_TRIE)
+                        {
 			    if (uc == 's' || uc == 'S') {
 				ANYOF_BITMAP_SET(data->start_class,
 					         LATIN_SMALL_LETTER_SHARP_S);
@@ -3769,7 +3780,9 @@ S_study_chunk(pTHX_ RExC_state_t *pRExC_state, regnode **scanp,
 
 			    /* All folds except under /iaa that include s, S,
 			     * and sharp_s also may include the others */
-			    if (OP(scan) != EXACTFA) {
+			    if (OP(scan) != EXACTFA
+                                && OP(scan) != EXACTFA_NO_TRIE)
+                            {
 				if (uc == 's' || uc == 'S') {
 				    ANYOF_BITMAP_SET(data->start_class,
 					           LATIN_SMALL_LETTER_SHARP_S);
@@ -14419,6 +14432,7 @@ S_regtail_study(pTHX_ RExC_state_t *pRExC_state, regnode *p, const regnode *val,
             switch (OP(scan)) {
                 case EXACT:
                 case EXACTF:
+                case EXACTFA_NO_TRIE:
                 case EXACTFA:
                 case EXACTFU:
                 case EXACTFU_SS:
