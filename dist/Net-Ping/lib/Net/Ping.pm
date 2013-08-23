@@ -17,7 +17,7 @@ use Time::HiRes;
 
 @ISA = qw(Exporter);
 @EXPORT = qw(pingecho);
-$VERSION = "2.42";
+$VERSION = "2.42_01";
 
 # Constants
 
@@ -676,6 +676,11 @@ sub tcp_connect
 	      if ($nfound && vec($wexc, $self->{"fh"}->fileno, 1)) {
 		  $! = unpack("i", getsockopt($self->{"fh"}, SOL_SOCKET,
 			                      SO_ERROR));
+	          # Gross hack to make t/450_service.t pass test 9 on
+	          # MSWin32 with VC++ 2010+ in Perl 5.19.4+. More generally,
+	          # we need a way of mapping the WSAE* value unpacked from
+	          # getsockopt()'s output to an E* value.
+	          $! = ECONNREFUSED if $! == 10061;
 	      }
 	  }
         }
