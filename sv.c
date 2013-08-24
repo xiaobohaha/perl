@@ -10388,6 +10388,9 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
     char ebuf[IV_DIG * 4 + NV_DIG + 32];
     /* large enough for "%#.#f" --chip */
     /* what about long double NVs? --jhi */
+#ifdef USE_LOCALE_NUMERIC
+    char* oldlocale = NULL;
+#endif
 
     PERL_ARGS_ASSERT_SV_VCATPVFN_FLAGS;
     PERL_UNUSED_ARG(maybe_tainted);
@@ -11348,6 +11351,15 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
 		/* No taint.  Otherwise we are in the strange situation
 		 * where printf() taints but print($float) doesn't.
 		 * --jhi */
+
+#ifdef USE_LOCALE_NUMERIC
+                if (! PL_numeric_standard && ! IN_SOME_LOCALE_FORM) {
+                    PL_numeric_standard = TRUE;
+                    oldlocale = savepv(setlocale(LC_NUMERIC, NULL));
+                    setlocale(LC_NUMERIC, "C");
+                }
+#endif
+
 #if defined(HAS_LONG_DOUBLE)
 		elen = ((intsize == 'q')
 			? my_snprintf(PL_efloatbuf, PL_efloatsize, ptr, nv)
@@ -11523,6 +11535,14 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
 	}
     }
     SvTAINT(sv);
+
+#ifdef USE_LOCALE_NUMERIC
+    if (oldlocale) {
+        setlocale(LC_NUMERIC, oldlocale);
+        PL_numeric_standard = FALSE;
+        Safefree(oldlocale);
+    }
+#endif
 }
 
 /* =========================================================================
