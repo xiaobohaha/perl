@@ -3112,10 +3112,10 @@
  *	function used to generate normalized random numbers.
  *	Values include 15, 16, 31, and 48.
  */
-#define Drand01()		freebsd_drand48_generate_double()		/**/
-#define Rand_seed_t		U32		/**/
-#define seedDrand01(x)	freebsd_drand48_init((Rand_seed_t)x)	/**/
-#define RANDBITS		48		/**/
+#define Drand01()              freebsd_drand48_generate_double()                /**/
+#define Rand_seed_t            U32           /**/
+#define seedDrand01(x) freebsd_drand48_init((Rand_seed_t)x)       /**/
+#define RANDBITS               48               /**/
 
 /* Select_fd_set_t:
  *	This symbol holds the type used for the 2nd, 3rd, and 4th
@@ -4753,6 +4753,6 @@
 #endif
 
 /* Generated from:
- * aa582e3516650ce6219694717a956c6d4c9dabcd8e405eb6e599150ef5d8557c config_h.SH
- * e0e303f4b6a586f3c94ed5c08078b3b837c1cc5683e61b0dd6c6b84cd8c44774 uconfig.sh
+ * 4884f1bd87948b279bc133de5c4b1652d756bbe2f151edde433790a5d0fe4285 config_h.SH
+ * 072f3162c1c4c37ebbdcba180a60efc0f7e716c49e3e1d02fbf3de3b2787ce70 uconfig.sh
  * ex: set ro: */
